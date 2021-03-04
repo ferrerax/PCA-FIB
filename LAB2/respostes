@@ -1,7 +1,7 @@
 # LAB 2
 Joaquim Ferrer Sagarra, PCA QP-2020-21
 
-##Accounting Tools
+## Accounting Tools
 2. 
 	- /home (NFS)
 	```
@@ -81,3 +81,32 @@ Event counts (actual) for /home2/users/alumnes/1227379/PCA/LAB2/lab2_session/pi.
         cpu_clk_unhalted                24,021,115,047           100.00
 		```
 4. 
+	- Speed-up O0 vs O3:
+		```
+		O0 time: 7.11user 0.01system 0:07.13elapsed 99%CPU (0avgtext+0avgdata 1440maxresident)k
+		03 time: 3.06user 0.00system 0:03.07elapsed 99%CPU (0avgtext+0avgdata 1292maxresident)k
+
+		speed-up user + system = 7.12/3.06 = 2.327
+		``` 
+## Profiling Tools
+	5. 
+		(a) Buscar la rutina més invocada --> DIVIDE
+		```
+		amb valgrind:
+			> valgrind --tool=callgrind ./pi.O0.g.static
+		amb gprof
+			> gprof -b ./pi.O0.pg.g.static
+		```
+		(b) La rutina que consumeix més temps es pot veure amb les mateixes comandes, és DIVIDE
+		(c) La línea que més consumeix --> pi.c:18 que consumeix el 37% del temps de CPU
+		```
+		amb valgrind: 
+			--> A la part de source code de cada rutina
+		amb el callgrind: 
+			> callgrind_annotate --auto=yes callgrind.out.12010
+		amb el gprof:
+			> gprof -b -l ./pi.O0.pg.g.static
+		```
+		(d) No apareix el codi de sistema. Perque pugués apareixer caldria compilar el sistema amb pg o instrumentar-lo amb valgrind. Cosa que no tenim permissos per fer
+
+	6. 
