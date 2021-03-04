@@ -1,0 +1,83 @@
+# LAB 2
+Joaquim Ferrer Sagarra, PCA QP-2020-21
+
+##Accounting Tools
+2. 
+	- /home (NFS)
+	```
+	> /usr/bin/time ./popul > ./hola.txt   
+	2.21user 0.01system 0:02.76elapsed 80%CPU (0avgtext+0avgdata 1236maxresident)k
+	0inputs+97664outputs (0major+63minor)pagefaults 0swaps
+	```
+	- /dades (CIFS)
+	```
+	> /usr/bin/time ./popul > /dades/joaquim.ferrer/linux/test.txt
+	2.50user 0.12system 2:16.43elapsed 1%CPU (0avgtext+0avgdata 1324maxresident)k
+	0inputs+0outputs (0major+66minor)pagefaults 0swaps
+	```
+	- /tmp (Disk)
+	- Explicació: /dades i /home usen un percentatge menor de CPU perquè estan muntats en xarxa. Aixó augmenta substancialment el temps de wait del procés. També podem extreure d'aquestes mesures que NFS resulta ser molt més eficients que un disc muntat a través d'SMB (cifs).
+
+3. 
+	- /home (NFS)
+	```
+	usr/bin/time ./pi > ./hola
+7.13user 0.01system 0:07.14elapsed 99%CPU (0avgtext+0avgdata 1368maxresident)k
+0inputs+72outputs (0major+73minor)pagefaults 0swaps
+	```
+	- /dades (CIFS)
+	```
+	> /usr/bin/time ./pi > /dades/joaquim.ferrer/linux/test.txt
+	Command terminated by signal 2
+	7.64user 0.25system 4:45.31elapsed 2%CPU (0avgtext+0avgdata 1332maxresident)k
+	0inputs+0outputs (0major+73minor)pagefaults 0swaps
+
+	```
+	- /tmp (disc)
+	```
+	> /usr/bin/time ./pi > /tmp/test.txt
+	7.11user 0.00system 0:07.12elapsed 99%CPU (0avgtext+0avgdata 1400maxresident)k
+	0inputs+0outputs (0major+75minor)pagefaults 0swaps
+	```
+	- Sí que hi ha una diferència clara entre els temps d'execució ente NFS, CIFS i Disc. A partir d'ara consideraré els temps de redirecció a /tmp, és a dir, a disc.
+
+ 	-  El percentatge de CPU (%CPU) és el percentatge del total de temps d'execució en el que el programa ha estat ocupant CPU, és a dir fent calculs útils pel programa. El temps de wait (espera en operacions de I/O) és temps en el que el procés esta bloquejat esperant el resultat d'una operació i per tant no es compta dons del temps de CPU. Com podem veure en els resultats de temps anteriors, quan es redirigeix a NFS i a CIFS augmenta considerablement el temps de wait i es pot veure per mitjà de la disminució del %CPU.
+	- Una alte eina que podem usar és _perf stat_ que ens permet amb el flag _-r_ tenir una repetició de programa. També podem accedit a contadors harware amb els flags -d -d -d (tres cops -d per accedir a informació detallada dels contadors). Per accedir als contadors hardware també podem usar les eines d'Operf com _ocount_ que ens permet crear Samples cert nombre d'events hardware donats. A continuació l'executaré per mostrar els cicles d'execució.
+		- perf:
+		``` 	
+		> perf stat -r 3 -d -d -d ./PCA/LAB2/lab2_session/pi > /tmp/hola.txt
+
+ Performance counter stats for './PCA/LAB2/lab2_session/pi' (3 runs):
+
+           7153.02 msec task-clock                #    1.000 CPUs utilized            ( +-  0.12% )
+                12      context-switches          #    0.002 K/sec                    ( +- 12.73% )
+                 0      cpu-migrations            #    0.000 K/sec                  
+                60      page-faults               #    0.008 K/sec                    ( +-  0.96% )
+       24234664514      cycles                    #    3.388 GHz                      ( +-  0.11% )  (30.67%)
+       21171827141      instructions              #    0.87  insn per cycle           ( +-  0.03% )  (38.39%)
+         916405735      branches                  #  128.115 M/sec                    ( +-  0.22% )  (38.43%)
+         109868197      branch-misses             #   11.99% of all branches          ( +-  0.13% )  (38.49%)
+        9109791015      L1-dcache-loads           # 1273.559 M/sec                    ( +-  0.03% )  (38.53%)
+           4624415      L1-dcache-load-misses     #    0.05% of all L1-dcache hits    ( +-  9.90% )  (38.55%)
+            288655      LLC-loads                 #    0.040 M/sec                    ( +- 37.62% )  (30.81%)
+             12536      LLC-load-misses           #    4.34% of all LL-cache hits     ( +- 48.55% )  (30.79%)
+   <not supported>      L1-icache-loads                                             
+           4660341      L1-icache-load-misses                                         ( +- 20.78% )  (30.79%)
+        9109267637      dTLB-loads                # 1273.486 M/sec                    ( +-  0.05% )  (30.78%)
+             43941      dTLB-load-misses          #    0.00% of all dTLB cache hits   ( +- 34.21% )  (30.75%)
+             31630      iTLB-loads                #    0.004 M/sec                    ( +- 40.99% )  (30.72%)
+             16253      iTLB-load-misses          #   51.39% of all iTLB cache hits   ( +- 46.94% )  (30.68%)
+   <not supported>      L1-dcache-prefetches                                        
+   <not supported>      L1-dcache-prefetch-misses                                   
+
+           7.15394 +- 0.00841 seconds time elapsed  ( +-  0.12% )
+		```
+		- ocount:
+ 		```
+		> ocount --event=cpu_clk_unhalted n> ./pi.g.pg
+Events were actively counted for 7.1 seconds.
+Event counts (actual) for /home2/users/alumnes/1227379/PCA/LAB2/lab2_session/pi.g.pg:
+        Event                           Count                    % time counted
+        cpu_clk_unhalted                24,021,115,047           100.00
+		```
+4. 
