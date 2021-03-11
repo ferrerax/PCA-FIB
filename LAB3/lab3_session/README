@@ -1,0 +1,40 @@
+
+
+DIRECTORY STRUCTURE
+------------------------
+
+There is a leading directory and a directory for each exercise
+There is a common Makefile in the leading directory and an specific Makefile in the directory of each exercise
+
+LEADING MAKEFILE
+------------------
+It assumes that all the applications are formed by only one source file
+It can generate 5 different versions of the executable file:
+
+name	 -> Normal 
+name.3	 -> Optimized  (option -O3, by default)
+name.pg  -> Profiling  (option -pg)
+name.pg3 -> Profiling  (option -pg, option -O3)
+name.g	 -> Debug info (option -g)
+name.pca -> PCA options
+etc.
+
+Rules:
+
+cleanall: -> (you have to be in the same directory where the file is located). It does "make clean" of all subdirectories 
+zip:      -> It makes a zip containing all the source files of all directories.
+
+SPECIFIC MAKEFILES
+--------------------
+All include the leading Makefile
+All of them allow the addition of specific compilation and/or linking options for the program
+
+It inherits rules from the leading Makefile to build executable files
+It inherits the "clean" rule -> To delete object/executable/core/... files from the current directory
+
+PROGRAMS
+---------
+Most of the programs write their results to the stdout. 
+Some of the programs write raw data... you need to redirect the stdout.
+Almost all programs admit one parameter. It indicates the number of iterations that will do its innermost loop.
+
