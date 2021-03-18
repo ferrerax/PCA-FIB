@@ -37,15 +37,15 @@ BITARRAY *createBitArray(bignum bits)
 
 void setBit(BITARRAY * ba, bignum bitSS)
 {
-    unsigned int *pInt = ba->p + (bitSS / ba->bitsPerInt);
-    unsigned int remainder = (bitSS % ba->bitsPerInt);
+    unsigned int *pInt = ba->p + (bitSS >> 5);
+    unsigned int remainder = (bitSS & 31);
     *pInt |= (1 << remainder);
 } 
 
 void clearBit(BITARRAY * ba, bignum bitSS)
 {
-    unsigned int *pInt = ba->p + (bitSS /); //Cal optimitzar: unsigned int *pInt = ba->p + (bitSS / ba->bitsPerInt)
-    unsigned int remainder = (bitSS % ba->bitsPerInt); //Cal optimitzar
+    unsigned int *pInt = ba->p + (bitSS >> 5); //Cal optimitzar: unsigned int *pInt = ba->p + (bitSS / ba->bitsPerInt)
+    unsigned int remainder = (bitSS & 31); //Cal optimitzar
     unsigned int mask = 1 << remainder;
     mask = ~mask;
     *pInt &= mask;
@@ -53,8 +53,8 @@ void clearBit(BITARRAY * ba, bignum bitSS)
 
 int getBit(BITARRAY * ba, bignum bitSS)
 {
-    unsigned int *pInt = ba->p + (bitSS / ba->bitsPerInt); //Cal optimitzar
-    unsigned int remainder = (bitSS % ba->bitsPerInt); //Cal optimitzar
+    unsigned int *pInt = ba->p + (bitSS >> 5); //Cal optimitzar
+    unsigned int remainder = (bitSS & 31); //Cal optimitzar
     unsigned int ret = *pInt;
     ret &= (1 << remainder);
     return (ret != 0);

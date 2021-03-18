@@ -20,6 +20,9 @@ zip:
 .c.3:
 	$(CC) $(CFLAGS) $< -O3 $(LDLIBS) -o $@
 
+.c.2:
+	$(CC) $(CFLAGS) $< -O2 $(LDLIBS) -o $@
+
 .c.0:
 	$(CC) $(CFLAGS) $< -O0 $(LDLIBS) -o $@
 
