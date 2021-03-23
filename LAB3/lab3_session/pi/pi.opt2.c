@@ -4,12 +4,36 @@
 
 int N, N4;
 signed char a[25480], b[25480], c[25480];
-int memo_q5[50];
-int memo_r5[50];
+unsigned char memo_rq5[50];
+//int memo_r5[50];
 
-int memo_q239[2390];
-int memo_r239[2390];
+unsigned short memo_rq239[2390];
+//int memo_r239[2390];
 
+void init_239(){
+    int i,j,div;
+    i=0;
+    div=0;
+    while (i<2390){
+        for (j=0; j<239; j++){
+            memo_rq239[i] = div | (j << 8);
+            i++;
+        }
+        div++;
+    }
+}
+void init_5(){
+    char i,j,div;
+    i=0;
+    div=0;
+    while (i<50){
+        for (j=0; j<5; j++){
+            memo_rq5[i] = div | (j << 4);
+            i++;
+        }
+        div++;
+    }
+}
 void init_memo(int *q, int *r, int num){
     int i,j,div;
     i=0;
@@ -47,14 +71,14 @@ void DIVIDE_239( signed char *x)
     int j, k;
     unsigned q, r, u;
     long v;
-
+    unsigned short memo;
     r = 0;                                       
     for( k = 0; k <= N4; k++ )                  
     {                                            
         u = r * 10 + x[k]; // residu*10 i baixo seguent num (primaria)
-        x[k] = memo_q239[u];         //x[k] es un digit -> 0 - 9;  r -> 0 - 24; u -> 0 - 249                 
-        r = memo_r239[u]; // u%n                     
-        //x[k] = q;  //resultat                              
+        memo = memo_rq239[u];        
+        r = (unsigned) memo >> 8; // u%n                     
+        x[k] = (signed char) memo & 0xff;  //resultat                              
         
     }                                           
 }
@@ -65,14 +89,15 @@ void DIVIDE_5( signed char *x)
     int j, k;
     unsigned q, r, u;
     long v;
+    char memo;
 
     r = 0;                                       
     for( k = 0; k <= N4; k++ )                  
     {                                            
         u = r * 10 + x[k]; // residu*10 i baixo seguent num (primaria)
-        x[k] = memo_q5[u];         //x[k] es un digit -> 0 - 9;  r -> 0 - 24; u -> 0 - 249                 
-        r = memo_r5[u]; // u%n                     
-        //x[k] = q;  //resultat                              
+        memo = memo_rq5[u];
+        r = memo >> 4; // u%n                     
+        x[k] = memo & 0xf;  //resultat                              
         
     }                                           
 }
@@ -168,8 +193,8 @@ int main( int argc, char *argv[] )
     
     if( argc > 1 )
         N = atoi(argv[1]);
-    init_memo(memo_q5,memo_r5,5);
-    init_memo(memo_q239,memo_r239,239);
+    init_239();
+    init_5();
     setbuf(stdout, NULL);
 
     calculate();
