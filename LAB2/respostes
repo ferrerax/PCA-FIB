@@ -89,7 +89,8 @@ Event counts (actual) for /home2/users/alumnes/1227379/PCA/LAB2/lab2_session/pi.
 		speed-up user + system = 7.12/3.06 = 2.327
 		``` 
 ## Profiling Tools
-	5. 
+###  Profiling with _gprof_ and _Valgrind_
+5. 
 		(a) Buscar la rutina més invocada --> DIVIDE
 		```
 		amb valgrind:
@@ -109,4 +110,145 @@ Event counts (actual) for /home2/users/alumnes/1227379/PCA/LAB2/lab2_session/pi.
 		```
 		(d) No apareix el codi de sistema. Perque pugués apareixer caldria compilar el sistema amb pg o instrumentar-lo amb valgrind. Cosa que no tenim permissos per fer
 
-	6. 
+- A partir d'aqui estaré usant la meva maquina personal Linux 5.10.16-arch1-1:
+    ```
+    Architecture:                    x86_64
+    CPU op-mode(s):                  32-bit, 64-bit
+    Byte Order:                      Little Endian
+    Address sizes:                   39 bits physical, 48 bits virtual
+    CPU(s):                          4
+    On-line CPU(s) list:             0-3
+    Thread(s) per core:              2
+    Core(s) per socket:              2
+    Socket(s):                       1
+    NUMA node(s):                    1
+    Vendor ID:                       GenuineIntel
+    CPU family:                      6
+    Model:                           78
+    Model name:                      Intel(R) Core(TM) i5-6200U CPU @ 2.30GHz
+    Stepping:                        3
+    CPU MHz:                         762.802
+    CPU max MHz:                     2800,0000
+    CPU min MHz:                     400,0000
+    BogoMIPS:                        4801.00
+    Virtualization:                  VT-x
+    L1d cache:                       64 KiB
+    L1i cache:                       64 KiB
+    L2 cache:                        512 KiB
+    L3 cache:                        3 MiB
+    NUMA node0 CPU(s):               0-3
+
+    ```
+6.
+            (a i b) Es pot veure com s'eliminen algunes rutines i els pesos es reparteixen. Això és per que s'ha fet inlining i s'ha modificat les operacions de llarga latència per altres de latencia menor.
+
+### Profiling with _oprofile_
+7. min count --> 2000003. Com més aslt és el count més baix és el numero de samples perquè els samples conten els coprs que s'ha cridat la rutina cada _count_ vegades.
+    ```
+    > sudo operf --event=cpu_clk_unhalted:2000003 ./pi.O0.g
+    > opreport -l
+    samples  %        image name               symbol name
+    6485     51.4438  pi.O0.g                  DIVIDE
+    3123     24.7739  pi.O0.g                  SUBTRACT
+    2748     21.7991  pi.O0.g                  LONGDIV
+    10        0.0793  libc-2.33.so             putchar
+    8         0.0635  kallsyms                 __fget_light
+    8         0.0635  kallsyms                 n_tty_write
+    8         0.0635  kallsyms                 vfs_write
+    7         0.0555  kallsyms                 _raw_spin_lock_irqsave
+    6         0.0476  kallsyms                 new_sync_write
+    5         0.0397  kallsyms                 __queue_work
+    ...
+    ```
+8. Procedim amb les mateixes comandes amb un binari compilat amb O3. Podem observar que O3 ha eliminat les funcions DIVIDE SUBSTRACT i LONGFIV que queden concentrades dins de la rutina calculate. A més, mirant el codi amb _opannotate_ es pot apreciar que es redueix substancialment el nombre de samples que marquen les operacions més pesades (les multiplicacions i les divisions). Al mirar l'assambler sembla que hagi canviar la divisió per un shift de bits i una multiplicació.
+
+###  Profiling with _perf_
+    Els resultats son els mateixos que podiem veure anteriorment però perf ens permet posar-ho en una interficie per terminal bastant bona i ben usable. A més, ens permet per a cada linea del codi en C veure quina traducció s'ha fet en assambler.
+    ```
+    > perf record -e cycles -c 2000003 ./pi.O0.g> /dev/null
+    > perf report/annotate
+    ```
+
+### Profiling using pin
+10. 
+    |                    | gcc O0      | gcc O3     |
+    |--------------------|-------------|------------|
+    | Total Instructions | 21238785662 | 7639695431 |
+    | Stack Reads        | 7489341397  | 1605161    |
+    | Stack Writes       | 1803843293  | 1642638    |
+    | IDIV + DIV         | 400380202   | 100090132  |
+    | IMUL + MUL         | 400444898   | 530786212  |
+    
+    comando:
+    ```
+    >  ../../../pin -t obj-intel64/insmix.so -- ../../../../PCA-FIB/LAB2/lab2_session/pi.O0.g 10000
+    ``` 
+### Instrumenting with system calls and PAPI
+12. 
+    (a) La crida a sistema time conta segons des de l'epoch usant el rellotge de la computadora de manera que no pot tenir en compte els canvis de contexts i no podrà contar el CPU time. Només tindrà l'epalsed.
+    (b) Amb el clock_gettime si que podrem calcular el temps de CPU usant el rellotge CLOCK_PROCESS_CPUTIME_ID. Aquesta crida té més presició perquè permet calcular a nivell de nanosegons. D'aquesta manera podrem calcular aquests temps amb les seguents crides a sistema:
+        ```
+        > clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &CPU_time); # CPU time
+        > clock_gettime(CLOCK_REALTIME, &elapsed_time); # elapsed time.
+
+        ## CPU_time i elapsed_time son structs del típus timespec de time.h.
+        ```
+    (c)  
+
+### Tracing Tools
+#### strace
+13.
+```
+> strace -c ./pi > /dev/null
+
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 89,22    0,020611           0     22006           write
+  3,82    0,000883         883         1           execve
+  1,60    0,000370          46         8           mmap
+  1,43    0,000330          27        12        10 openat
+  1,15    0,000266          22        12         9 newfstatat
+  0,64    0,000148          74         2         1 arch_prctl
+  0,57    0,000131         131         1           brk
+  0,48    0,000110          36         3           mprotect
+  0,34    0,000079          19         4           pread64
+  0,32    0,000073          73         1           munmap
+  0,18    0,000041          41         1         1 access
+  0,16    0,000037          18         2           close
+  0,10    0,000023          23         1           read
+------ ----------- ----------- --------- --------- ----------------
+```
+
+14. 
+```strace -e trace=write ./pi > /dev/null``` ens mostra totes les crides a write, els seus paràmetres i el codi de retorn.
+
+#### ltrace
+
+15.
+
+```
+> ltrace -c ./pi > /dev/null
+% time     seconds  usecs/call     calls      function
+------ ----------- ----------- --------- --------------------
+ 39.93    0.809859          80     10005 putchar
+ 29.29    0.593997          59     10040 fprintf
+ 25.07    0.508571          50     10007 memset
+  5.22    0.105788          58      1800 fputc
+  0.48    0.009814          60       161 fwrite
+  0.01    0.000228         228         1 setbuf
+------ ----------- ----------- --------- --------------------
+100.00    2.028257                 32014 total
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
