@@ -30,6 +30,10 @@ usage(){
 }
 
 parseargs() {
+
+  if [[ $# -eq 1 ]]; then
+    usage
+  fi
   while (("$#")); do
     case "$1" in
       -e|--executable)

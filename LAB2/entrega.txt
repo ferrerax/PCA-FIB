@@ -1,0 +1,328 @@
+2.A
+
+PCA/lab2_session> /usr/bin/time ./popul > test
+2.19user 0.04system 0:02.74elapsed 81%CPU (0avgtext+0avgdata 1236maxresident)k
+0inputs+97664outputs (0major+66minor)pagefaults 0swaps
+
+
+
+PCA/lab2_session> /usr/bin/time ./popul > /dades/jordi.garcia.aguilar/linux/test
+2.43user 0.12system 1:15.33elapsed 3%CPU (0avgtext+0avgdata 1284maxresident)k
+0inputs+0outputs (0major+65minor)pagefaults 0swaps
+
+
+2.B
+
+PCA/lab2_session> /usr/bin/time ./popul > /tmp/test
+2.20user 0.00system 0:02.21elapsed 99%CPU (0avgtext+0avgdata 1252maxresident)k
+0inputs+0outputs (0major+65minor)pagefaults 0swaps
+
+
+2.C
+
+En el disc muntat amb nfs el % de cpu redueix significativament, fins al 81%. El disc muntat per cifs es encara mes lent, reduint el % de CPU fins al 3%. 
+
+3.A
+
+PCA/lab2_session> gcc -o pi.O0 pi.c
+PCA/lab2_session> ls -la pi.O0
+-rwxr-xr-x 1 jordi.garcia.aguilar alumnes 17096 Feb 25 12:49 pi.O0
+
+
+3.B
+
+PCA/lab2_session> for i in 1 2 3 4 5; do /usr/bin/time -o times/pi.O0.time -a ./pi.O0 > /tmp/test ; done
+
+PCA/lab2_session> cat times/pi.O0.time 
+7.19user 0.00system 0:07.19elapsed 100%CPU (0avgtext+0avgdata 1380maxresident)k
+0inputs+0outputs (0major+77minor)pagefaults 0swaps
+7.17user 0.01system 0:07.18elapsed 99%CPU (0avgtext+0avgdata 1400maxresident)k
+0inputs+0outputs (0major+74minor)pagefaults 0swaps
+7.18user 0.02system 0:07.21elapsed 99%CPU (0avgtext+0avgdata 1292maxresident)k
+0inputs+0outputs (0major+70minor)pagefaults 0swaps
+7.17user 0.01system 0:07.19elapsed 99%CPU (0avgtext+0avgdata 1444maxresident)k
+0inputs+0outputs (0major+73minor)pagefaults 0swaps
+7.17user 0.01system 0:07.18elapsed 99%CPU (0avgtext+0avgdata 1376maxresident)k
+0inputs+0outputs (0major+73minor)pagefaults 0swaps
+
+
+PCA/lab2_session> ./pi.O0 > goldens/pi.O0.golden
+
+Sí que hi ha una diferència clara entre els temps d'execució ente NFS, CIFS i Disc. A partir d'ara consideraré els temps de redirecció a /tmp, és a dir, a disc.
+
+3.C
+El percentatge de CPU (%CPU) és el percentatge del total de temps d'execució en el que el programa ha estat ocupant CPU, és a dir fent calculs útils pel programa. El temps de wait (espera en operacions de I/O) és temps en el que el procés esta bloquejat esperant el resultat d'una operació i per tant no es compta dons del temps de CPU. Com podem veure en els resultats de temps anteriors, quan es redirigeix a NFS i a CIFS augmenta considerablement el temps de wait i es pot veure per mitjà de la disminució del %CPU.
+
+3.D
+Una alte eina que podem usar és _perf stat_ que ens permet amb el flag -r tenir una repetició de programa. També podem accedit a contadors harware amb els flags -d -d -d (tres cops -d per accedir a informació detallada dels contadors). Per accedir als contadors hardware també podem usar les eines d'Operf com _ocount_ que ens permet crear Samples cert nombre d'events hardware donats. A continuació l'executaré per mostrar els cicles d'execució.
+ - perf:
+
+PCA/lab2_session> perf stat -r 3 -d -d -d ./pi.O0 > /tmp/null
+
+ Performance counter stats for './pi.O0' (3 runs):
+
+          7.164,19 msec task-clock                #    1,000 CPUs utilized            ( +-  0,04% )
+                27      context-switches          #    0,004 K/sec                    ( +- 15,42% )
+                 0      cpu-migrations            #    0,000 K/sec                  
+                59      page-faults               #    0,008 K/sec                    ( +-  0,57% )
+    25.627.408.581      cycles                    #    3,577 GHz                      ( +-  0,03% )  (57,13%)
+    15.726.242.313      stalled-cycles-frontend   #   61,36% frontend cycles idle     ( +-  0,02% )  (57,13%)
+    21.157.976.332      instructions              #    0,83  insn per cycle         
+                                                  #    0,74  stalled cycles per insn  ( +-  0,01% )  (64,27%)
+       919.855.094      branches                  #  128,396 M/sec                    ( +-  0,02% )  (64,27%)
+       114.561.956      branch-misses             #   12,45% of all branches          ( +-  0,00% )  (64,27%)
+     9.111.722.243      L1-dcache-loads           # 1271,842 M/sec                    ( +-  0,01% )  (64,27%)
+         3.571.185      L1-dcache-load-misses     #    0,04% of all L1-dcache hits    ( +-  0,11% )  (64,27%)
+            59.816      LLC-loads                 #    0,008 M/sec                    ( +- 15,57% )  (64,29%)
+   <not supported>      LLC-load-misses                                             
+   <not supported>      L1-icache-loads                                             
+           702.887      L1-icache-load-misses                                         ( +-  1,63% )  (64,30%)
+     9.112.861.951      dTLB-loads                # 1272,001 M/sec                    ( +-  0,01% )  (64,31%)
+           115.410      dTLB-load-misses          #    0,00% of all dTLB cache hits   ( +- 15,44% )  (64,31%)
+                33      iTLB-loads                #    0,005 K/sec                    ( +- 26,77% )  (57,17%)
+           107.863      iTLB-load-misses          # 330191,84% of all iTLB cache hits  ( +- 31,02% )  (57,15%)
+   <not supported>      L1-dcache-prefetches                                        
+         2.023.953      L1-dcache-prefetch-misses #    0,283 M/sec                    ( +-  0,71% )  (57,13%)
+
+           7,16622 +- 0,00274 seconds time elapsed  ( +-  0,04% )
+
+- ocount
+PCA/lab2_session> ocount --event=CPU_CLK_UNHALTED ./pi.O0.pg
+
+Events were actively counted for 2942309 nanoseconds.
+Event counts (actual) for /home2/users/alumnes/1227356/PCA/lab2_session/pi.O0.pg:
+        Event                    Count                    % time counted
+        CPU_CLK_UNHALTED         2,830,211                100.00
+
+
+4.A
+
+PCA/lab2_session> gcc -O1 -o pi.O1 pi.c 
+PCA/lab2_session> gcc -O2 -o pi.O2 pi.c
+PCA/lab2_session> gcc -O3 -o pi.O3 pi.c
+PCA/lab2_session> ./pi.O3 > /tmp/pi.O3.out
+PCA/lab2_session> diff /tmp/pi.O3.out goldens/pi.O0.golden 
+
+4.B
+
+PCA/lab2_session> /usr/bin/time ./pi.O3 > /tmp/pi.O3.out
+2.70user 0.00system 0:02.71elapsed 99%CPU (0avgtext+0avgdata 1360maxresident)k
+0inputs+0outputs (0major+75minor)pagefaults 0swaps
+
+PCA/lab2_session> /usr/bin/time ./pi.O0 > /tmp/null
+7.12user 0.02system 0:07.15elapsed 99%CPU (0avgtext+0avgdata 1336maxresident)k
+0inputs+0outputs (0major+73minor)pagefaults 0swaps
+
+Speedup:  7.14/2.7 = 2.64
+
+4.C
+
+Speedup:  7.15/2.71 = 2.6383763837638377
+
+5
+PCA/lab2_session> gcc -g -pg -o pi.O0.pg pi.c 
+PCA/lab2_session> gcc -g -pg -static -o pi-static.O0.pg pi.c
+PCA/lab2_session> gcc -g -static -o pi-static.O0 pi.c
+
+5.A
+Buscar la rutina més invocada --> DIVIDE
+ amb valgrind:
+ > valgrind --tool=callgrind ./pi-static.O0
+ > /assig/pcagrau/qcachegrind <fitxer generat per la comanda anterior>
+ 
+ amb gprof:
+ > gprof -b ./pi-static.O0.pg
+ 
+5.B               
+ La rutina que consumeix més temp (acomulatiu) es pot veure amb les mateixes comandes, és DVIDE
+ amb valgrind:
+  igual que al (a)
+
+ amb gprof:
+ > gprof -b -p ./pi-static.O0.pg
+
+5.C
+ La línea que més consumeix --> pi.c:18 que consumeix el 37% del temps de U
+ amb gprof:
+ > gprof -b -l ./pi-static.O0.pg 
+
+ amb valgrind: 
+ --> Amb qcachegrind la part de source code de cada rutina
+ amb el callgrind: 
+ > callgrind_annotate --auto=yes callgrind.out.12010
+
+5.D
+No apareix el codi de sistema. Perque pugués apareixer caldria compilar el sistema amb pg o instrumentar-lo amb valgrind. Cosa que no tenim permissos per fer
+
+6.A
+
+
+   PCA/lab2_sessiogprof -b -p ./pi-static.O0.pg 
+Flat profile:
+
+Each sample counts as 0.01 seconds.
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls   s/call   s/call  name    
+ 53.90      3.80     3.80    30014     0.00     0.00  DIVIDE
+ 23.69      5.47     1.67    20011     0.00     0.00  SUBTRACT
+ 21.42      6.98     1.51    10004     0.00     0.00  LONGDIV
+  0.85      7.04     0.06                             write
+  0.14      7.05     0.01                             __memset_erms
+  0.00      7.05     0.00    10007     0.00     0.00  SET
+  0.00      7.05     0.00    10005     0.00     0.00  progress
+  0.00      7.05     0.00        2     0.00     0.00  MULTIPLY
+  0.00      7.05     0.00        1     0.00     6.98  calculate
+  0.00      7.05     0.00        1     0.00     0.00  epilog
+  0.00      7.05     0.00        1     0.00     6.98  main
+
+PCA/lab2_session> gprof -b -p ./pi-static.O3.pg
+Flat profile:
+
+Each sample counts as 0.01 seconds.
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls  Ts/call  Ts/call  name    
+ 99.29      2.78     2.78                             calculate
+  0.71      2.80     0.02                             write
+  0.00      2.80     0.00        1     0.00     0.00  main
+
+han desaparegut totes les funcions que crida calculate i per tant s'ha actualitzat el percentatge en consequenca
+
+6.B
+ > objdump -d ./pi-static.O3.pg
+Es pot veure com s'ha fet inlining en les funcions que cridava calculate (les que tenien el nom en majuscules) 
+
+7.A
+
+ > operf --event=CPU_CLK_UNHALTED:750000 ./pi.O0.g
+
+ > opreport -l
+Using /home2/users/alumnes/1227356/PCA/lab2_session/oprofile_data/samples/ for samples directory.
+CPU: Intel Ivy Bridge microarchitecture, speed 3600 MHz (estimated)
+Counted CPU_CLK_UNHALTED events (Clock cycles when not halted) with a unit mask of 0x00 (No unit mask) count 750000
+samples  %        image name               symbol name
+18452    53.5990  pi.O0.g                  DIVIDE
+8348     24.2491  pi.O0.g                  LONGDIV
+7446     21.6290  pi.O0.g                  SUBTRACT
+154       0.4473  no-vmlinux               /no-vmlinux
+6         0.0174  libc-2.26.so             __memset_erms
+4         0.0116  libc-2.26.so             write
+3         0.0087  libc-2.26.so             vfprintf
+2         0.0058  libc-2.26.so             _IO_default_xsputn
+...
+
+ > operf --event=CPU_CLK_UNHALTED:100000 ./pi.O0.g
+
+ > opreport -l
+Using /home2/users/alumnes/1227356/PCA/lab2_session/oprofile_data/samples/ for samples directory.
+CPU: Intel Ivy Bridge microarchitecture, speed 3600 MHz (estimated)
+Counted CPU_CLK_UNHALTED events (Clock cycles when not halted) with a unit mask of 0x00 (No unit mask) count 100000
+samples  %        image name               symbol name
+141057   53.5595  pi.O0.g                  DIVIDE
+62666    23.7944  pi.O0.g                  LONGDIV
+57493    21.8302  pi.O0.g                  SUBTRACT
+1923      0.7302  no-vmlinux               /no-vmlinux
+85        0.0323  libc-2.26.so             __memset_erms
+30        0.0114  libc-2.26.so             vfprintf
+15        0.0057  libc-2.26.so             write
+14        0.0053  libc-2.26.so             new_do_write
+12        0.0046  libc-2.26.so             _IO_file_write@@GLIBC_2.2. 
+
+El nombre de samples es diferent ja que estem canviant la frequencia de sampleig: 1/750000 i 1/100000 respectivament
+
+8.A
+
+ Procedim amb les mateixes comandes amb un binari compilat amb O3. Podem observar que O3 ha eliminat les funcions DIVIDE SUBSTRACT i LONGFIV que queden concentrades dins de la rutina calculate. 
+A més, mirant el codi amb_opannotate es pot apreciar que es redueix substancialment el nombre de samples que marquen les operacions més pesades (les multiplicacions i les divisions). Al mirar l'assambler sembla que hagi canviar la divisió per un shift de bits i una multiplicació.
+
+
+9.A
+ Els resultats son els mateixos que podiem veure anteriorment però perf ens permet posar-ho en una interficie per terminal bastant bona i ben usable. A més, ens permet per a cada linea del odi en C veure quina traducció s'ha fet en assambler.
+
+    > perf record -e cycles -c 6000 ./pi.O3.g> /dev/null
+    > perf report -n
+
+10
+
+    |                    | gcc O0      | gcc O3     |
+    |--------------------|-------------|------------|
+    | Total Instructions | 21238785662 | 7639695431 |
+    | Stack Reads        | 7489341397  | 1605161    |
+    | Stack Writes       | 1803843293  | 1642638    |
+    | IDIV + DIV         | 400380202   | 100090132  |
+    | IMUL + MUL         | 400444898   | 530786212  |
+    
+>  ../../../pin -t obj-intel64/insmix.so -- ../../../../PCA-FIB/LAB2/lab2_session/pi.O0.g 10000
+
+11
+
+ACK
+
+12.A
+
+La crida a sistema times() conta milisegons des que el process a comencat a executar-se tant en user com en system mode, de manera que nomes tinda el CPU time.
+
+12.B
+Amb el clock_gettime podrem calcular el temps de CPU usant el rellotge CLOCK_PROCESS_CPUTIME_ID i el elapsed time amb el CLOCK_REALTIME. Aquesta crida té més presició perquè permet calcular a nivell de nanosegons. D'aquesta manera podrem calcular aquests temps amb les seguents crides a sistema:
+  > clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &CPU_time); # CPU time
+  > clock_gettime(CLOCK_REALTIME, &elapsed_time); # elapsed time.
+
+  ## CPU_time i elapsed_time son structs del típus timespec de time.h.
+
+12.C
+
+No instalat al laboratori
+
+
+13
+> strace -c ./pi > /dev/null
+
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 89,22    0,020611           0     22006           write
+  3,82    0,000883         883         1           execve
+  1,60    0,000370          46         8           mmap
+  1,43    0,000330          27        12        10 openat
+  1,15    0,000266          22        12         9 newfstatat
+  0,64    0,000148          74         2         1 arch_prctl
+  0,57    0,000131         131         1           brk
+  0,48    0,000110          36         3           mprotect
+  0,34    0,000079          19         4           pread64
+  0,32    0,000073          73         1           munmap
+  0,18    0,000041          41         1         1 access
+  0,16    0,000037          18         2           close
+  0,10    0,000023          23         1           read
+------ ----------- ----------- --------- --------- ----------------
+
+14 
+ > strace -e trace=write ./pi > /dev/null
+
+Ens mostra totes les crides a write, els seus parametres i el codi de retorn.
+
+
+15
+
+> ltrace -c ./pi > /dev/null
+% time     seconds  usecs/call     calls      function
+------ ----------- ----------- --------- --------------------
+ 39.93    0.809859          80     10005 putchar
+ 29.29    0.593997          59     10040 fprintf
+ 25.07    0.508571          50     10007 memset
+  5.22    0.105788          58      1800 fputc
+  0.48    0.009814          60       161 fwrite
+  0.01    0.000228         228         1 setbuf
+------ ----------- ----------- --------- --------------------
+100.00    2.028257                 32014 total
+
+16
+Adjuntem l'script 
+
+PCA/scripts> ./autopca -h
+Usage: autopca -e <file> [options] [arguments]
+
+options:
+        -e,--executable <file>          Executable optimitzat
+        -n,--ntimes <N>                 Executa N cops l'executable
+        -g,--golden-exe <golden-file>   Fitxer original, sense optimitzacions
+        -v,--verbose                    Mes info
+        -h,--help                       Printa aixo i surt
+
