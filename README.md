@@ -60,9 +60,20 @@ Els compiladors poden optimitzar el codi amb limitacions
    - `-a` append
    - `-f` modificar format de output
    - `-p` format posix 
-- **perf stat** Mostra info treta d'alguns contadors hw. Eina molt interessant per a veure els fallos de cache, TLB, etc.
+- **`perf stat`** Mostra info treta d'alguns contadors hw. Eina molt interessant per a veure els fallos de cache, TLB, etc.
   - `-o`
   - `r` Repetir la comanda i fer mitjana
   - `d` Detailed, dona més detalls. És bo posar 3 d: `-d -d -d` 
  ###2.3.2 Profiling
- 
+ - **`taskset`** Permet posat paràmetres a l'execució com ara el nombre de processadors a usar o quins en concret usar. Es fa a a través d'una mascara.
+   - Usage: `taskset [options] mask command [args]`
+ - **`gproof`** Standard Linux Profiler. Cal compilar amb el flag `-g` i `-pg`.
+   - Mostra info profiling d'una execució que ja s'ha fet. **CAL EXECUTAR EL PROGRAMA ABANS**. Mostra el CPU time i el nombre de crides a funcions, a llibreries dinàmiques. No mostra info de codi. 
+   - Genera un report en raw out i un callgraph molt cheto.
+   - Té molta presició però pot haver biaix en el pes de cada subr/linea. 
+   - Coses a tenir en compte del seu funcionament:
+     - El flag `-pg` fa que el compilador inserti linies de codi a l'inici de cada func.
+     - Afegeix interrupcions per fer fer sampling
+     - Guardarà el resultat de l'execució del codi a un fitxer out.gmon
+   - **Usage:**
+     - Compilar amb `-g` i `-pg`
