@@ -127,5 +127,50 @@ Aquí unes preguntes útils que ens va fer en Dani a classe:
 
 ## 3. Operacions de llarga latència.
 
-   
-  
+Les operacions de llarga latència depen molt de l'arquitectura però normalment són:
+ - Divisions i mòduls
+ - Multiplicacions
+ - Algunes Crides a sistema.
+ - Càlculs repetits.
+ - Ifs que generen moltes fallades de predicció.
+ -  
+
+### 3.1 Bithacks.
+Canviar les operacions de llarga latència per jocs amb bits. Molts cops ja els fa el compilador.
+ - **Potències de 2 i divisió entre potències de 2** Es pot canviar per un shift esquerra o dreta.
+   - Ojo amb els negatius perquè és fa malament l'arrodoniment!!
+     - Podem fer workarround amb la seguent expressió: `X/2^n = (X + (X>>32) & (Y-1)) >> n`
+ - **Moduls entre potències de 2** `n % 2^(n) = n & ( 2^(n) - 1 )`
+ - **Valor absolut** `abs = (n ^ (n>>31)) - (n>>31);`
+ - **Màxim de dos enters** `max = n - ((n-m) & ((n-m)>>31));` o `max = n - ((n-m) & -(n<m));` Per evitar salts innecessaris i possibles fallades de predicció.
+   - Cal valorar el cost del if vs el cost del bithack des d'un punt de vista de mitjana aritmàtica de costos. 
+ - **Mirar que si els bits N i M estan actius** `((n & ((1<<N)|(1<<M))) != 0)` o `((n & ((1<<N)|(1<<M))) == ((1<<N)|(1<<M)))`
+ - **Obtenir bit N** `(x>>N)&0x1`
+ - **Setejar bit N** `x | (1<<N)`
+ - **Posar el bit N a 0** ` x & (~(1<<N))`
+ - **Aconseguir el bit N d'un vector d'enters** `(vector[N/32]>>(N%32))&0x1)
+ - **És X potència de 2?** `((x & (x-1))==0) & (x!=0)`
+
+### 3.2 Expressions aritmètiques
+ - Tenir en compte que a vegades el compilador no sap que certs nombres són constants i podem fer la propagació manualment.
+ - Canviar operacions de llarga latència per altres. `a*3 = a + a + a`
+   - Atenció que en el cas de la coma flotant podríem obtenir resultats diferents per la questió de la presició. Pot no importar-nos. 
+ - Cal detectar calculs doblats (càlcul de resultats previament calculats).
+ - Detectar codi que genera resultats no usats.
+ - Càlculs linears a la variable d'inducció poden calcular-se sumant a la variable:
+   - `for (i=0; i<N; i++){...  i*5 + 2 ...}`  --> `for(i=0, i5=2; i<N; i++, i5+=5){...  i5 ...}`
+     - Molt donat en casos així: `for (i=0; i<N; i++){...  a[i] ...}` 
+ - Reconeixement de patrons --> Podem aplicar _specialization_.
+### 3.3 Memoization
+Per a reduir la computació que es fa sempre amb les mateixes dades precalculem els resultats i els guardem en un vector/taula de hash.
+ - nslookups
+ - Funcions factorials
+ - Trigonometria.
+### 3.4 Specialization
+Hi ha rutines que s'han fet genèriques/parametritzables però que poden ser més eficiens si les fem específiques.
+  - El compilador pot fer-ho si veu que hi ha constants o inlining.
+### 3.5 Buffering
+La idea és reduir el nombre de crides a sistema que poden bloquejar l'execució. Hi ha un gran overhead al canviar el mode d'execució i canvi de context.
+ - És interessant veure el temps que passem en system mode.
+ - Analitzem el nombre de crides a sistema que tenim.
+ - **SOLUCIÓ** Compactem les crides a sistema usant buffers. P.E. fer les escriptures en buffers més grans.
