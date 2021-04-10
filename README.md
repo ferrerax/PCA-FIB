@@ -67,9 +67,9 @@ Els compiladors poden optimitzar el codi amb limitacions
  ###2.3.2 Profiling
  - **`taskset`** Permet posat paràmetres a l'execució com ara el nombre de processadors a usar o quins en concret usar. Es fa a a través d'una mascara.
    - Usage: `taskset [options] mask command [args]`
- - **`gproof`** Standard Linux Profiler. Cal compilar amb el flag `-g` i `-pg`.
+ - **`gprof`** Standard Linux Profiler. Cal compilar amb el flag `-g` i `-pg`.
    - Mostra info profiling d'una execució que ja s'ha fet. **CAL EXECUTAR EL PROGRAMA ABANS**. Mostra el CPU time i el nombre de crides a funcions, a llibreries dinàmiques. No mostra info de codi. 
-   - Genera un report en raw out i un callgraph molt cheto.
+   - Genera un report en raw out i un callgraph .ps molt cheto que es pot veure amb el programa ghostview.
    - Té molta presició però pot haver biaix en el pes de cada subr/linea. 
    - Coses a tenir en compte del seu funcionament:
      - El flag `-pg` fa que el compilador inserti linies de codi a l'inici de cada func.
@@ -77,3 +77,7 @@ Els compiladors poden optimitzar el codi amb limitacions
      - Guardarà el resultat de l'execució del codi a un fitxer out.gmon
    - **Usage:**
      - Compilar amb `-g` i `-pg`
+     - `-p` flat profile.
+     - `-q` callgraph.
+     - `-b` Treure la verbosity pesada.
+     - `-l` Veure el profiling a nivell de linea de codi.
