@@ -34,7 +34,7 @@ Els compiladors poden optimitzar el codi amb limitacions
  5. Decidir si es possible millorar més questions i tornar al punt 3.
  
  ## 2. Eines
- ## 2.1 Compilació i linkat.
+ ### 2.1 Compilació i linkat.
  Flags del gcc per a PCA:
  - `-S` Genera codi assembler
  - `-o` output name
@@ -48,14 +48,14 @@ Els compiladors poden optimitzar el codi amb limitacions
  - `-lname` Linka la llibreria anomenada libname.a
  - `-static`
  
- ## 2.2 Eines per a executables
+ ### 2.2 Eines per a executables
 - **`objdump`** dissassembly amb opció `-d`.
 - **`ldd`** mostra les llibreries que necessita l'executable.
 - **`nm`** Mostra els símbols de l'executable.
  
- ## 2.3 Eines per a mesurar
+ ### 2.3 Eines per a mesurar
  Veure que aquestes eines acostumen a treure l'output per stderr cosa que permet redirigir la sortida.
- ### 2.3.1 Accounting
+ #### 2.3.1 Accounting
  - **`time`** Hi ha diferents versions, la que implementa cada shell i la GNU que es troba normalment a _/usr/bin/time_
    - `-a` append
    - `-f` modificar format de output
@@ -64,7 +64,7 @@ Els compiladors poden optimitzar el codi amb limitacions
   - `-o`
   - `r` Repetir la comanda i fer mitjana
   - `d` Detailed, dona més detalls. És bo posar 3 d: `-d -d -d` 
- ###2.3.2 Profiling
+ #### 2.3.2 Profiling
  - **`taskset`** Permet posat paràmetres a l'execució com ara el nombre de processadors a usar o quins en concret usar. Es fa a a través d'una mascara.
    - Usage: `taskset [options] mask command [args]`
  - **`gprof`** Standard Linux Profiler. Cal compilar amb el flag `-g` i `-pg`.
@@ -81,3 +81,51 @@ Els compiladors poden optimitzar el codi amb limitacions
      - `-q` callgraph.
      - `-b` Treure la verbosity pesada.
      - `-l` Veure el profiling a nivell de linea de codi.
+ - **`valgrind`**
+   - No necessita flags de compilació.
+   - Mostra els resultats en una UI prou intuitiva
+   - **Usage:**
+     - `valgrind --tool=callgrind ./prog [args]` Genera la informació.
+     - `kcachegrind callgrind.out-pid` Ens permet veure'l.
+     - `callgrind_annotate --auto=yes` També ens permet veure'l.
+ - **Oprofile** Són un seguit d'eines que permeten usar el compts HW per coses com el nombre d'instruccions executades, Hits/Misses en els diferents nivells de memòria, Hits/Misses en pedicció.
+   - No mostra les crides a funció.
+   - Inclou info de llibreria i OS.
+   - Pot incloure activitat d'altres processos.
+   - **Usage:**
+     - `ophelp` per veure els diferents contados HW que tenim.
+     - `operf --event=<event>:<repeticions_per_sample> ./pi.O0.g` per capturar la info
+     - `opreport -l` Veure la info.
+     - `opanotate --source <prog>` ens permet veure la info a nivell de linea de codi.
+     - `ocount` ens permet fer simplent acounting d'events.
+ - **Perf** Fa també un contatge de comptadors HW.
+   - No mostra el nombre de crides a cada funcions.
+   - **Usage:**
+     - `perf list` llista els possibles events.
+     - `perf record -e <event> -F <events_per_sample> command [args]`
+     - `perf report` Veure el report en una UI de termninal molt cheta.
+     - `perf annotate` Com el opanotate.
+ - **Pintools** És un seguit d'eines. La que tractiem en questió és *insmix*. Es útil perquè ens conta quines instruccions s'estan executant encada rutina i les conta. Va bé per entendre optimitzacions.
+   - Usage:
+     - `insmix_total command [args]` per fer el profiling. Veure el fitxer _insmix.out_ al acabar.
+ - **PAPI** Llibreria que permet instrumentació manual del codi.
+   - Per a mes info veure transpas pag 60 tema 2.  --> no hem tocat PAPI al lab.
+ #### 2.3.3 Tracing
+ - **`strace`** Crides a sistema
+   - Usage:
+     - `-c` Mostra el numero de crides a sistema
+     - `-e trace=<crida>` Monitoritzar només un tipus de crida.
+     - `-e read=3` Monitoritzar crides a sistema que llegeixen d'un canal en concret.
+     - `-t` Afegir un timestamp.
+ - **`ltrace`** Mostra les invocacions a llibreries dinàmiques. Mostra la funció, l'input i els paràmetres.
+   - Funciona igual que `strace`.
+
+Aquí unes preguntes útils que ens va fer en Dani a classe:
+
+![imatge](https://user-images.githubusercontent.com/47460533/114274068-05627600-9a1d-11eb-9bdb-0417a59ca545.png)
+
+
+## 3. Operacions de llarga latència.
+
+   
+  
