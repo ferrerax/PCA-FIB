@@ -49,5 +49,20 @@ Els compiladors poden optimitzar el codi amb limitacions
  - `-static`
  
  ## 2.2 Eines per a executables
+- **`objdump`** dissassembly amb opció `-d`.
+- **`ldd`** mostra les llibreries que necessita l'executable.
+- **`nm`** Mostra els símbols de l'executable.
  
+ ## 2.3 Eines per a mesurar
+ Veure que aquestes eines acostumen a treure l'output per stderr cosa que permet redirigir la sortida.
+ ### 2.3.1 Accounting
+ - **`time`** Hi ha diferents versions, la que implementa cada shell i la GNU que es troba normalment a _/usr/bin/time_
+   - `-a` append
+   - `-f` modificar format de output
+   - `-p` format posix 
+- **perf stat** Mostra info treta d'alguns contadors hw. Eina molt interessant per a veure els fallos de cache, TLB, etc.
+  - `-o`
+  - `r` Repetir la comanda i fer mitjana
+  - `d` Detailed, dona més detalls. És bo posar 3 d: `-d -d -d` 
+ ###2.3.2 Profiling
  
