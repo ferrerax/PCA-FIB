@@ -52,9 +52,15 @@ int memo_r239[2390];
 				r2 = memo_r239[u];}
 #define BODY_SUBTRACT(k) {\
 				t = y[k] - z[k];\
-				x[k] = t;\
-				x[k] += (10 & (t>>7));\
+				x[k] = t + (10 & (t>>7));\
         z[k-1] += (t<0);}
+#define BODY_SUBTRACT_FUSION_A_B(k) {\
+				t = y[k] - z[k];\
+				x[k] = t + (10 & (t>>7));\
+        z[k-1] += (t<0);\
+				t = y[k] - z2[k];\
+				x2[k] = t + (10 & (t>>7));\
+        z2[k-1] += (t<0);}
 
 
 void init_memo(int *q, int *r, int num){
@@ -248,34 +254,25 @@ void SUBTRACT_OPT( signed char *x, signed char *y, signed char *z )
     x[k] += (10 & (t>>7));                          
 }
 
+
 void SUBTRACT_FUSION_A_B( signed char *x, signed char *x2, signed char *y, signed char *z, signed char *z2)                      
 {                                                
     int j, k;
     unsigned q, r, u;
     long v;
-    for( k = N4; k >= 1; k-- )                   
+    signed char t, t2;
+    for( k = N4; k-1 >= 1; k-= 2 )                   
     {                                            
-        if( (x[k] = y[k] - z[k]) < 0 )           
-        {                                        
-            x[k] += 10;                          
-            z[k-1]++;                            
-        }                                        
+      BODY_SUBTRACT_FUSION_A_B(k);
+      BODY_SUBTRACT_FUSION_A_B(k-1);
+    }
+    for (; k >= 1; k--) BODY_SUBTRACT_FUSION_A_B(k);
         
-        if( (x2[k] = y[k] - z2[k]) < 0 )           
-        {                                        
-            x2[k] += 10;                          
-            z2[k-1]++;                            
-        }                                        
-    }                                            
-    if( (x[k] = y[k] - z[k]) < 0 )           
-    {                                        
-        x[k] += 10;                          
-    }                                        
-    
-    if( (x2[k] = y[k] - z2[k]) < 0 )           
-    {                                        
-        x2[k] += 10;                          
-    }                                        
+    t = y[k] - z[k];
+    x[k] = t + (10 & (t>>7));                          
+
+    t = y[k] - z2[k];
+    x2[k] = t + (10 & (t>>7));                          
 }
 
 void calculate( void );
