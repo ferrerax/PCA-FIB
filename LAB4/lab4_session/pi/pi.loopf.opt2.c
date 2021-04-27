@@ -191,47 +191,6 @@ void LONGDIV( signed char *x, int n )
         }                                       
     }                                           
 }
-void LONGDIV_OPT( signed char *x, int n )                          
-{                                                
-    int j, k;
-    unsigned q, r, u;
-    long v;
-
-    if( n < 6553 )                               
-    {                                            
-        r = 0;                                   
-        for( k = 0; k <= N4; k++ )               
-        {                                        
-            u = r * 10 + x[k];                   
-            q = u / n;                           
-            r = u - q * n;                       
-            x[k] = q;                            
-        }                                       
-    }                                            
-    else                                         
-    {                                            
-        r = 0;                                   
-        for( k = 0; k <= N4; k++ )              
-        {                                       
-          
-            if( r < 6553 )                      
-            {                                   
-                u = r * 10 + x[k];              
-                q = u / n;                      
-                r = u - q * n;                  
-            }                                   
-            else                                
-            {                                   
-                v = (long) r * 10 + x[k];       
-                q = v / n;                      
-                r = v - q * n;                  
-            }                                   
-            
-            
-            x[k] = q;                           
-        }                                       
-    }                                           
-}
 
 void MULTIPLY( signed char *x, int n )                        
 {                                            
