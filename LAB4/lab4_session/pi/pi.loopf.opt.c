@@ -53,7 +53,7 @@ int memo_r239[2390];
 #define BODY_SUBTRACT(k) {\
 				t = y[k] - z[k];\
 				x[k] = t;\
-				x[k] += (10 | (t>>7));\
+				x[k] += (10 & (t>>7));\
         z[k-1] += (t<0);}
 
 
@@ -237,13 +237,12 @@ void SUBTRACT_OPT( signed char *x, signed char *y, signed char *z )
     unsigned q, r, u;
     long v;
 		signed char t;
-    for( k = N4; k >= 1; k-- )                   
+    for( k = N4; k-1 >= 1; k-=2 )                   
     {                                            
-				t = y[k] - z[k];
-				x[k] = t;
-				x[k] += (10 & (t>>7));
-        z[k-1] += (t<0);
+      BODY_SUBTRACT(k);
+      BODY_SUBTRACT(k-1);
     }                                            
+    for (; k >= 1; k--) BODY_SUBTRACT(k);
     t = y[k] - z[k];
 		x[k] = t;
     x[k] += (10 & (t>>7));                          
