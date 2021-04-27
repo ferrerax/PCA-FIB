@@ -243,12 +243,9 @@ void calculate( void )
     SET( a, 0 );
     SET( b, 0 );
 
-    for( j = 2 * N4 + 1; j >= 3; j -= 8 )
+    for( j = 2 * N4 + 1; j >= 3; j -= 2 )
     {
 			BODY_FOR_CALCULATE(j)
-			BODY_FOR_CALCULATE(j-2)
-			BODY_FOR_CALCULATE(j-4)
-			BODY_FOR_CALCULATE(j-6)
     }
 
     SET( c, 1 );

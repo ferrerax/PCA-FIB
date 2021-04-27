@@ -69,16 +69,10 @@ void DIVIDE( signed char *x, int n )
     long v;
 
     r = 0;                                       
-    for( k = 0; k+7 <= N4; k+=8 )                  
+    for( k = 0; k+1 <= N4; k+=2 )                  
     {                                            
 			BODY_FOR_DIVIDE(k)
 			BODY_FOR_DIVIDE(k+1)
-			BODY_FOR_DIVIDE(k+2)
-			BODY_FOR_DIVIDE(k+3)
-      BODY_FOR_DIVIDE(k+4); 
-      BODY_FOR_DIVIDE(k+5); 
-      BODY_FOR_DIVIDE(k+6); 
-      BODY_FOR_DIVIDE(k+7); 
     }                                           
 		for(;k <= N4; k++) BODY_FOR_DIVIDE(k);
 }
@@ -91,16 +85,10 @@ void DIVIDE_239( signed char *x)
     long v;
 
     r = 0;                                       
-    for( k = 0; k+7 <= N4; k+=8 )                  
+    for( k = 0; k+1 <= N4; k+=2 )                  
     {                                            
        BODY_FOR_DIVIDE239(k); 
        BODY_FOR_DIVIDE239(k+1); 
-       BODY_FOR_DIVIDE239(k+2); 
-       BODY_FOR_DIVIDE239(k+3); 
-       BODY_FOR_DIVIDE239(k+4); 
-       BODY_FOR_DIVIDE239(k+5); 
-       BODY_FOR_DIVIDE239(k+6); 
-       BODY_FOR_DIVIDE239(k+7); 
     }                                           
 		for(;k <= N4; k++) BODY_FOR_DIVIDE239(k);
 }
@@ -112,16 +100,10 @@ void DIVIDE_25( signed char *x)
     long v;
 
     r = 0;                                       
-    for( k = 0; k+7 <= N4; k+=8 )                  
+    for( k = 0; k+1 <= N4; k+=2 )                  
     {                                            
        BODY_FOR_DIVIDE25(k); 
        BODY_FOR_DIVIDE25(k+1); 
-       BODY_FOR_DIVIDE25(k+2); 
-       BODY_FOR_DIVIDE25(k+3); 
-       BODY_FOR_DIVIDE25(k+4); 
-       BODY_FOR_DIVIDE25(k+5); 
-       BODY_FOR_DIVIDE25(k+6); 
-       BODY_FOR_DIVIDE25(k+7); 
     }                                           
 		for(;k <= N4; k++) BODY_FOR_DIVIDE25(k);
 }
@@ -133,16 +115,10 @@ void DIVIDE_5( signed char *x)
     long v;
 
     r = 0;                                       
-    for( k = 0; k+7 <= N4; k+=8 )                  
+    for( k = 0; k+1 <= N4; k+=2 )                  
     {                                            
        BODY_FOR_DIVIDE5(k); 
        BODY_FOR_DIVIDE5(k+1); 
-       BODY_FOR_DIVIDE5(k+2); 
-       BODY_FOR_DIVIDE5(k+3); 
-       BODY_FOR_DIVIDE5(k+4); 
-       BODY_FOR_DIVIDE5(k+5); 
-       BODY_FOR_DIVIDE5(k+6); 
-       BODY_FOR_DIVIDE5(k+7); 
     }                                           
 		for(;k <= N4; k++) BODY_FOR_DIVIDE5(k);
 }
@@ -259,18 +235,10 @@ void calculate( void )
     SET( a, 0 );
     SET( b, 0 );
 
-    for( j = 2 * N4 + 1; j-14 >= 3; j -= 16 )
+    for( j = 2 * N4 + 1; j >= 3; j -= 2 )
     {
 			BODY_FOR_CALCULATE(j)
-			BODY_FOR_CALCULATE(j-2)
-			BODY_FOR_CALCULATE(j-4)
-			BODY_FOR_CALCULATE(j-6)
-			BODY_FOR_CALCULATE(j-8)
-			BODY_FOR_CALCULATE(j-10)
-			BODY_FOR_CALCULATE(j-12)
-			BODY_FOR_CALCULATE(j-14)
     }
-    for(; j >= 3; j -= 2 ) BODY_FOR_CALCULATE(j);
 
     SET( c, 1 );
 
