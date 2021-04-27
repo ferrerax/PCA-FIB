@@ -50,6 +50,11 @@ int memo_r239[2390];
 				u = r2 * 10 + x[k];\
 				x[k] = memo_q239[u];\
 				r2 = memo_r239[u];}
+#define BODY_SUBTRACT(k) {\
+				t = y[k] - z[k];\
+				x[k] = t;\
+				x[k] += (10 | (t>>7));\
+        z[k-1] += (t<0);}
 
 
 void init_memo(int *q, int *r, int num){
@@ -236,13 +241,12 @@ void SUBTRACT_OPT( signed char *x, signed char *y, signed char *z )
     {                                            
 				t = y[k] - z[k];
 				x[k] = t;
-
-				x[k] += (10 | (t>>7));                          
-        z[k-1] += (t<0);                            
+				x[k] += (10 & (t>>7));
+        z[k-1] += (t<0);
     }                                            
     t = y[k] - z[k];
 		x[k] = t;
-    x[k] += (10 | (t>>7));                          
+    x[k] += (10 & (t>>7));                          
 }
 
 void SUBTRACT_FUSION_A_B( signed char *x, signed char *x2, signed char *y, signed char *z, signed char *z2)                      
@@ -314,15 +318,14 @@ void calculate( void )
 
     SET( c, 1 );
 
-    //SUBTRACT( a, c, a );
     SUBTRACT_FUSION_A_B(a,b,c,a,b);
     DIVIDE_5( a );
 
-    //SUBTRACT( b, c, b );
     DIVIDE_239( b );
 
     MULTIPLY( a, 4 );
-    SUBTRACT( a, a, b );
+    //SUBTRACT( a, a, b );
+    SUBTRACT_OPT( a, a, b );
     MULTIPLY( a, 4 );
 
     progress();
