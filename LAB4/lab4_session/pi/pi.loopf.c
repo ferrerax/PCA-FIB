@@ -17,10 +17,9 @@ int memo_r239[2390];
         SET( c, 1 );\
         LONGDIV( c, j );\
 \
-        SUBTRACT( a, c, a );\
+        SUBTRACT_FUSION_A_B(a,b,c,a,b);\
         DIVIDE_25( a );\
 \
-        SUBTRACT( b, c, b );\
         DIVIDE_239( b );\
         DIVIDE_239( b );\
 \
@@ -226,6 +225,36 @@ void SUBTRACT( signed char *x, signed char *y, signed char *z )
     }                                        
 }
 
+
+void SUBTRACT_FUSION_A_B( signed char *x, signed char *x2, signed char *y, signed char *z, signed char *z2)                      
+{                                                
+    int j, k;
+    unsigned q, r, u;
+    long v;
+    for( k = N4; k >= 1; k-- )                   
+    {                                            
+        if( (x[k] = y[k] - z[k]) < 0 )           
+        {                                        
+            x[k] += 10;                          
+            z[k-1]++;                            
+        }                                        
+        
+        if( (x2[k] = y[k] - z2[k]) < 0 )           
+        {                                        
+            x2[k] += 10;                          
+            z2[k-1]++;                            
+        }                                        
+    }                                            
+    if( (x[k] = y[k] - z[k]) < 0 )           
+    {                                        
+        x[k] += 10;                          
+    }                                        
+    
+    if( (x2[k] = y[k] - z2[k]) < 0 )           
+    {                                        
+        x2[k] += 10;                          
+    }                                        
+}
 
 void calculate( void );
 void progress( void );
