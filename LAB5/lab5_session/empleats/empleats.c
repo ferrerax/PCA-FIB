@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -57,8 +58,8 @@ int main(int argc, char *argv[])
 		empleats[i].ptrClauForaneaDepartament = i<<10 + i<<14 + i>>3;
 		empleats[i].ptrClauCategoria = i<<24 + i<< 18 + i<<10 + i>>2;
 #ifdef EXTES     
-                empleats[i].Address[0] = 'A' + ((i>>4) + (i<<2)) & 0x15;
-                empleats[i].Nom_parella[0] = 'a' + ((i>>5) + (i<<2)) & 0x15;
+      empleats[i].Address[0] = 'A' + ((i>>4) + (i<<2)) & 0x15;
+      empleats[i].Nom_parella[0] = 'a' + ((i>>5) + (i<<2)) & 0x15;
   		empleats[i].Cognoms_parella[0] = 'A' + ((i>>5) + (i<<3)) & 0x15;
 #endif
 	}
