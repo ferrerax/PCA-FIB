@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "clock.h"
 
 #define MAX_NOM 40
 #define MAX_DIAS_MES 31 
@@ -14,13 +15,13 @@
 
 typedef struct 
 {
-  long long int NID;              /* Identification number - rang:0-2^32-1*/
-  char Nom[MAX_NOM];  
-  char Cognoms[MAX_NOM];  
+  unsigned int NID;              /* Identification number - rang:0-2^32-1*/
   int  horesMes[MAX_DIAS_MES]; 
-  char Categoria[MAX_CATEGORIA];
   unsigned int ptrClauForaneaDepartament;
   unsigned int ptrClauCategoria;
+  char Nom[MAX_NOM];  
+  char Cognoms[MAX_NOM];  
+  char Categoria[MAX_CATEGORIA];
 #ifdef EXTES     
   char Address[MAX_ADDRESS];
   char Nom_parella[MAX_NOM];
@@ -63,11 +64,11 @@ int main(int argc, char *argv[])
   		empleats[i].Cognoms_parella[0] = 'A' + ((i>>5) + (i<<3)) & 0x15;
 #endif
 	}
-
 	qsort(empleats, N, sizeof(Templeat), compare);
-	for (i=0; i<N; i++){
-	        write(1, &empleats[i],sizeof(Templeat));
-	}
+  
+//	for (i=0; i<N; i++){
+//	        write(1, &empleats[i],sizeof(Templeat));
+//	}
 
 	return 0;
 }
