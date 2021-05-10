@@ -1,0 +1,11 @@
+
+ Performance counter stats for './empleats.3 2500000':
+
+     6,279,085,028      cycles:u                                                    
+
+       1.814757793 seconds time elapsed
+
+       1.613731000 seconds user
+       0.192727000 seconds sys
+
+

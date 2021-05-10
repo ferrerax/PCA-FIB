@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "clock.h"
 
 #define MAX_NOM 40
 #define MAX_DIAS_MES 31 
