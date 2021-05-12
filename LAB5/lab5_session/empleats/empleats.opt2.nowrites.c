@@ -75,9 +75,15 @@ int main(int argc, char *argv[])
 	}
 
 	qsort(onde, N, sizeof(ondestas), compare);
-	for (i=0; i<N; i++){
-	        write(1, onde[i].empleat,sizeof(Templeat));
-	}
+	//Templeat *buffer = (Templeat *) malloc(N*sizeof(Templeat));
+	//memset(buffer, 0, N*sizeof(Templeat));
+	//for (i=0; i<N; i++){
+	        ////write(1, onde[i].empleat,sizeof(Templeat));
+          ////memcpy(&buffer[i],onde[i].empleat,sizeof(Templeat)); 
+          //buffer[i] = *(onde[i].empleat);
+          //
+	//}
+	//write(1, buffer,sizeof(Templeat)*N);
 
 	return 0;
 }

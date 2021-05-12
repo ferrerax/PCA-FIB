@@ -1,11 +1,11 @@
 
- Performance counter stats for './empleats.3 2500000':
+ Performance counter stats for './empleats.opt2.nowrites.3 2500000':
 
-     6,279,085,028      cycles:u                                                    
+     2,106,093,586      cycles:u                                                    
 
-       1.814757793 seconds time elapsed
+       0.741656368 seconds time elapsed
 
-       1.613731000 seconds user
-       0.192727000 seconds sys
+       0.685623000 seconds user
+       0.056132000 seconds sys
 
 

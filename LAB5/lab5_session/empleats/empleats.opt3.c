@@ -31,7 +31,7 @@ typedef struct
 
 typedef struct {
   unsigned int nid;
-  Templeat *empleat;
+  unsigned int iempleat;
 } ondestas;
 
 int compare(const void *p1, const void *p2)
@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 	for (i=0; i<N; i++) {
     nid = rand();
     onde[i].nid = nid;
-    onde[i].empleat = &empleats[i];
+    onde[i].iempleat = i;
 		empleats[i].NID = nid;
 		empleats[i].Nom[0] = 'A' + ((i>>3) + (i<<2)) & 0x15;
 		empleats[i].Cognoms[0] = 'a' + ((i>>2) + (i<<3)) & 0x15;
@@ -75,9 +75,15 @@ int main(int argc, char *argv[])
 	}
 
 	qsort(onde, N, sizeof(ondestas), compare);
+	Templeat *buffer = (Templeat *) malloc(N*sizeof(Templeat));
+	memset(buffer, 0, N*sizeof(Templeat));
 	for (i=0; i<N; i++){
-	        write(1, onde[i].empleat,sizeof(Templeat));
+	        //write(1, onde[i].empleat,sizeof(Templeat));
+          //memcpy(&buffer[i],onde[i].empleat,sizeof(Templeat)); 
+          buffer[i] = empleats[onde[i].iempleat];
+          
 	}
+	write(1, buffer,sizeof(Templeat)*N);
 
 	return 0;
 }
