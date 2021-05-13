@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     char *c1;
     char *c1_out;
 
-    c1        = (char *) malloc(count);
+    c1     = (char *) malloc(count);
     c1_out = (char *) malloc(count);
  
     while ((n1=read(0, c1, count)) > 0)
