@@ -228,7 +228,7 @@ Ens permet tenir més instruccions útils per iteració. Cosa que ajuda al hardw
    
    for(i=0; i<3000; i+=3) {
     acum0 += b[i]   + c[i];
-    acum1 += b[i+1] + c[i+1];
+    acum1 += b``[i+1] + c[i+1];
     acum2 += b[i+2] + c[i+2];
    }
    acum = acum0 + acum1 + acum2;
@@ -260,7 +260,53 @@ Ens permet tenir més instruccions útils per iteració. Cosa que ajuda al hardw
  #### 4.1.7 Eliminar els salts de difícil predicció.
  Podem fer-ho per mitjà de bithacks.
  
+ ## 5. Optimitzacions conscients de la memòria.
+ Eines d'anàlisi
+  - **`/proc/cpuinfo`**
+  - **`/proc/meminfo`**
+  - **`lscpu`**
+  - _Perf_ i _Operf_
+  - **Valgrind:** Ens pot donar una visió acurada de la gestió del HEAP.
+  ```
+  Per grabar:
+  > valgrind --tool=massif prog
+  
+  Per veure:
+  > ms_print massif.out.PID
+  ```
+  
+  ### 5.1 Tècniques d'explotació de la jerarquia de memòria.
+  #### 5.1.1 Evitar l'alisaing
+  Evitar que el compilador forci accessos a memoria innecessaris per tal d'evitar el possible aliasing. Per exemple, en el codi següent, el compilador no sap si x i y estaran sempre apuntant a la mateixa dada i per tant ha d'accedir a memòria a cada iteració:
+  ```
+  void multiply(int *x, int *y, int n){ 
+   int i;
+   for (i=0; i<n; i++)
+    *x = *x + *y;
+  }
+  ```
+  Cosa que pot arreglar-se perque el valor d'x i y es guardi sempre en registres:
+  ```
+  void multiply(int *x, int *y, int n){ 
+   int i, tmp_x = *x, tmp_y = *y;
+   for (i=0; i<n; i++)
+    tmp_x = tmp_x + tmp_y;
+   *x = tmp_x;
+  }
+  ```
+#### 5.1.2 Alineament de dades.
+Tenir les dades correctament alineades a memòria ens permet aprofitar molt més els accessos i per tant tenir una molt millor explotació de l'ample de banda.
+ - **Alineament estàtic:** Generalment la memòria es troba alineada. El complador inclou _padding_ per a tenir en compte aquesta questió. Podem dir al compilador que no afegeixi padding als structs amb `__atribute__((__packed__))` o `#pragma pack(1)`
+ - **Alineament dinàmic:** Els mallocs alineen a int. Podem alinear a altres tamanys amb `int posix_memalign(void **ptr, sizet align, sizetsize);`
  
- 
- 
+ #### 5.1.3 Aprofitar l'ample de banda
+  - Eliminar paddings estúpids
+  - Usant tamanys de dades petits. Ser conseqüent amb els tamanys de les dades.
+  - Fer bufferings per no llegir i escriure dades a memoria una a una sinó aprofitant l'ample de banda.
+  - Reorganitzar els structs.
+
+#### 5.1.4 Explotar la localitat de les dades
+- Accedir a les matrius per files i no per columnes
+- Fusió de vectors per no tenir problemes de cache
+- Fer tractament de matrius en blocs per poder fer blocking.
    
