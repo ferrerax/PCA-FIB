@@ -174,3 +174,93 @@ La idea és reduir el nombre de crides a sistema que poden bloquejar l'execució
  - És interessant veure el temps que passem en system mode.
  - Analitzem el nombre de crides a sistema que tenim.
  - **SOLUCIÓ** Compactem les crides a sistema usant buffers. P.E. fer les escriptures en buffers més grans.
+
+## 4. Control de fluxe
+La idea vindria a ser ajudar al predictor de salts a encertar i/o reduir els salts en processadors segmentats per poder augmentar l'IPC.
+
+Predicció de salts:
+ - **Per Hardware:** Hi ha un autòmata que prediu els salts
+ - **Per Software:** Podem fer us de macros per ajudar al predictor:
+  ```
+  #define likely(x)      __builtin_expect(!!(x), 1)
+  #define unlikely(x)    __builtin_expect(!!(x), 0)
+  ```
+  ```
+  if (unlikely(pmd_bad(*pmd))) { ...  }
+  ```
+Podem facilment estudiar el comportament dels branches d'un programa amb el `perf stat` o usant l'event _branches_: `perf record --event branches -F 25000 ./pi.g 10000 >/dev/null`
+
+### 4.1 Tècniques de control de fluxe
+L'objectiu és reduir els salts que realitza el programa.
+#### 4.1.1 Inlinig
+Substituir la crida pel codi de la funció. Ens estalviem moltes instruccions (còpia de paràmetres, enllaç dinàmic, etc).
+**Qüestions a tenir en compte:**
+ - Al augmentar el codi estem explotant pitjor la jerarquia de memòria.
+ - Veure que fer unrolling podria fer que el compilador no ens afegís l'inlining desitjat.
+ - Ens podem assegurar de que el processador farà inlining si el tenim en una macro.
+ - Cal posar parèntesis entre els paràmetres d'una macro:
+ ```
+ #define right_shift_ok(_x,_y) ((_x) << (_y))
+ #define right_shift_ko(_x,_y) (_x << _y)
+ ```
+
+#### 4.1.2 Code hoisting
+Veure càlculs que poden fer-se fora del bucle i no cal calcular a cada iteració.
+
+#### 4.1.3 Unrolling
+Ens permet tenir més instruccions útils per iteració. Cosa que ajuda al hardware a explotar millor l'execució fora d'ordre.
+**Qüestions a tenir en compte:**
+ - Els compiladors poden fer unrolling però són molt conservadors. GCC ho fa al nivell O3.
+ - Pot caldre afegir un epílog al final del bucle al que s'ha fet unrolling.
+ - Fer molt d'unrolling pot fer que el compilador no faci inlinig per no augmentar els fallos en cache d'instruccions.
+ - Es poden acabar els registres i guardar variables a la pila no millora la performance.
+ - Cal anar en compte no estiguem creant dependències de dades. Podem fer ús d'acumuladors per a que no sigui així:
+   ```
+   Aquest codi desenrollat té dependències de dades:
+   
+   for(i=0; i<3000; i+=3) {
+    acum += b[i]   + c[i];
+    acum += b[i+1] + c[i+1];
+    acum += b[i+2] + c[i+2];
+   }
+   
+   Cal arreglar:
+   
+   for(i=0; i<3000; i+=3) {
+    acum0 += b[i]   + c[i];
+    acum1 += b[i+1] + c[i+1];
+    acum2 += b[i+2] + c[i+2];
+   }
+   acum = acum0 + acum1 + acum2;
+   ```
+  #### 4.1.4 Loop Collapsing
+  Convertir dos bucles imbrincats en un de sol:
+  - Codi original:
+  ```
+  int a[100][300];
+  for (i = 0; i < 300; i++)
+   for (j = 0; j < 100; j++)
+     a[j][i] = 0;
+  ```
+  - Codi millorat:
+  ```
+  int *p = &a[0][0];
+   for (i = 0; i < 300*100; i++)
+     *p++ = 0;
+  ``` 
+ **Qüestions a tenir en compte:**
+  - Els compiladors no ho acostumen a fer
+ 
+ #### 4.1.5 Loop Fusion
+ Ajuntar dos bucles que poden tenir un comportament semblant i sense dependències. És una optimització que normalment no aplica el compilador.
+ 
+ #### 4.1.6 Ordre d'evaluació de la condició
+ Aprofitar la _Lazy Evaluation_ de C. El compilador no pot aplicar aquesta optimització. Podem considerar els costs de les diferents condicions per ordenar-les correctament intentant impedir que s'hagin de comprovar les més costoses.
+ 
+ #### 4.1.7 Eliminar els salts de difícil predicció.
+ Podem fer-ho per mitjà de bithacks.
+ 
+ 
+ 
+ 
+   
