@@ -310,3 +310,23 @@ Tenir les dades correctament alineades a memòria ens permet aprofitar molt més
 - Fusió de vectors per no tenir problemes de cache
 - Fer tractament de matrius en blocs per poder fer blocking.
    
+## 6. SIMD
+Single instruction multiple data.
+### 6.1 Programació amb SIMD
+ - S'han anat fent diferents extensions. Falta saber quines tenim amb `lscpu`.
+ - Estructures de dades
+   - **`__mm128i`:** integer (16 bytes, 8 words, 4 ints, 2 longs)
+   - **`__mm128`:** Float (4 floats)
+   - **`__mm128d`:** double (2 doubles)
+ - Instruccions: `_mm_<intrin_op>_<sufix>` (128 bits) i `_mm256_<intrin_op>_<sufix>` (256 bits).
+   - p/ep/s: packed, extended packed o scalar. 
+   - s/d: single, double precision.
+   - i<numero>: Signed integer i tamany de l'integer.
+   - u<numero>: Unsigned integer i tamany de l'integer.
+ - **Coses a tenir en compte**
+   - Cal tenir les dades alineades!!
+   - Cal fer un load al registre i un store després.
+   - Exemple de codi:
+ 
+ ![imatge](https://user-images.githubusercontent.com/47460533/119388003-04825c80-bcca-11eb-83e7-e8c42fc3153f.png)
+
