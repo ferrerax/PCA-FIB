@@ -45,6 +45,9 @@ int main(int argc, char *argv[])
 	_mm_store_si128((__m128i *)&c1_out[i+16*1], a1);
 	_mm_store_si128((__m128i *)&c1_out[i+16*2], a2);
 	_mm_store_si128((__m128i *)&c1_out[i+16*3], a3);
+
+	
+	dprintf(2,"%d/n",i);
       }
       
       //Epilog vectorial
