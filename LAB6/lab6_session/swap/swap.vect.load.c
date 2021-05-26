@@ -19,11 +19,11 @@ int main(int argc, char *argv[])
     __m128i a3;
 
     //__m128i c1[COUNT], c1_out[COUNT];
-    char c1[COUNT] __attribute__((aligned(16)));
-    char c1_out[COUNT] __attribute__((aligned(16)));
+    char c1[COUNT*16] __attribute__((aligned(16)));
+    char c1_out[COUNT*16] __attribute__((aligned(16)));
+    int n1;
 
     mask = _mm_set_epi8(0xE, 0xF, 0xC, 0xD, 0xA, 0xB, 0x8, 0x9, 0x6, 0x7, 0x4, 0x5, 0x2, 0x3, 0x0, 0x1);
-    int n1;
 
     while( (n1 = read(0,c1,COUNT*16)) > 0)
     {
@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
         a2 = _mm_load_si128((__m128i *)&c1[i+16*2]);
         a3 = _mm_load_si128((__m128i *)&c1[i+16*3]);
 
-	a0 = _mm_shuffle_epi8(a0, mask);
+	      a0 = _mm_shuffle_epi8(a0, mask);
         a1 = _mm_shuffle_epi8(a1, mask);
         a2 = _mm_shuffle_epi8(a2, mask);
         a3 = _mm_shuffle_epi8(a3, mask);
@@ -47,7 +47,6 @@ int main(int argc, char *argv[])
 	_mm_store_si128((__m128i *)&c1_out[i+16*3], a3);
 
 	
-	dprintf(2,"%d/n",i);
       }
       
       //Epilog vectorial
