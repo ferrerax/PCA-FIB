@@ -42,10 +42,12 @@ int main(int argc, char *argv[])
         a3 = _mm_shuffle_epi8(a3, mask);
 
 	_mm_store_si128((__m128i *)&c1_out[i],   a0);
-	_mm_store_si128((__m128i *)&c1_out[i+1], a1);
-	_mm_store_si128((__m128i *)&c1_out[i+2], a2);
-	_mm_store_si128((__m128i *)&c1_out[i+3], a3);
+	_mm_store_si128((__m128i *)&c1_out[i+16*1], a1);
+	_mm_store_si128((__m128i *)&c1_out[i+16*2], a2);
+	_mm_store_si128((__m128i *)&c1_out[i+16*3], a3);
       }
+      
+      //Epilog vectorial
       for(; i < n1-15; i+=16) {
         a0 = _mm_load_si128((__m128i *)&c1[i]);
         a0 = _mm_shuffle_epi8(a0, mask);
@@ -60,7 +62,7 @@ int main(int argc, char *argv[])
       if (i < n1)
          c1_out[i] = c1[i];
 
-      write(1,c1_out, n1);
+      write(1, c1_out, n1);
     }
     return 0;
 }
