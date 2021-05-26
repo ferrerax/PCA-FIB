@@ -174,3 +174,159 @@ La idea és reduir el nombre de crides a sistema que poden bloquejar l'execució
  - És interessant veure el temps que passem en system mode.
  - Analitzem el nombre de crides a sistema que tenim.
  - **SOLUCIÓ** Compactem les crides a sistema usant buffers. P.E. fer les escriptures en buffers més grans.
+
+## 4. Control de fluxe
+La idea vindria a ser ajudar al predictor de salts a encertar i/o reduir els salts en processadors segmentats per poder augmentar l'IPC.
+
+Predicció de salts:
+ - **Per Hardware:** Hi ha un autòmata que prediu els salts
+ - **Per Software:** Podem fer us de macros per ajudar al predictor:
+  ```
+  #define likely(x)      __builtin_expect(!!(x), 1)
+  #define unlikely(x)    __builtin_expect(!!(x), 0)
+  ```
+  ```
+  if (unlikely(pmd_bad(*pmd))) { ...  }
+  ```
+Podem facilment estudiar el comportament dels branches d'un programa amb el `perf stat` o usant l'event _branches_: `perf record --event branches -F 25000 ./pi.g 10000 >/dev/null`
+
+### 4.1 Tècniques de control de fluxe
+L'objectiu és reduir els salts que realitza el programa.
+#### 4.1.1 Inlinig
+Substituir la crida pel codi de la funció. Ens estalviem moltes instruccions (còpia de paràmetres, enllaç dinàmic, etc).
+**Qüestions a tenir en compte:**
+ - Al augmentar el codi estem explotant pitjor la jerarquia de memòria.
+ - Veure que fer unrolling podria fer que el compilador no ens afegís l'inlining desitjat.
+ - Ens podem assegurar de que el processador farà inlining si el tenim en una macro.
+ - Cal posar parèntesis entre els paràmetres d'una macro:
+ ```
+ #define right_shift_ok(_x,_y) ((_x) << (_y))
+ #define right_shift_ko(_x,_y) (_x << _y)
+ ```
+
+#### 4.1.2 Code hoisting
+Veure càlculs que poden fer-se fora del bucle i no cal calcular a cada iteració.
+
+#### 4.1.3 Unrolling
+Ens permet tenir més instruccions útils per iteració. Cosa que ajuda al hardware a explotar millor l'execució fora d'ordre.
+**Qüestions a tenir en compte:**
+ - Els compiladors poden fer unrolling però són molt conservadors. GCC ho fa al nivell O3.
+ - Pot caldre afegir un epílog al final del bucle al que s'ha fet unrolling.
+ - Fer molt d'unrolling pot fer que el compilador no faci inlinig per no augmentar els fallos en cache d'instruccions.
+ - Es poden acabar els registres i guardar variables a la pila no millora la performance.
+ - Cal anar en compte no estiguem creant dependències de dades. Podem fer ús d'acumuladors per a que no sigui així:
+   ```
+   Aquest codi desenrollat té dependències de dades:
+   
+   for(i=0; i<3000; i+=3) {
+    acum += b[i]   + c[i];
+    acum += b[i+1] + c[i+1];
+    acum += b[i+2] + c[i+2];
+   }
+   
+   Cal arreglar:
+   
+   for(i=0; i<3000; i+=3) {
+    acum0 += b[i]   + c[i];
+    acum1 += b``[i+1] + c[i+1];
+    acum2 += b[i+2] + c[i+2];
+   }
+   acum = acum0 + acum1 + acum2;
+   ```
+  #### 4.1.4 Loop Collapsing
+  Convertir dos bucles imbrincats en un de sol:
+  - Codi original:
+  ```
+  int a[100][300];
+  for (i = 0; i < 300; i++)
+   for (j = 0; j < 100; j++)
+     a[j][i] = 0;
+  ```
+  - Codi millorat:
+  ```
+  int *p = &a[0][0];
+   for (i = 0; i < 300*100; i++)
+     *p++ = 0;
+  ``` 
+ **Qüestions a tenir en compte:**
+  - Els compiladors no ho acostumen a fer
+ 
+ #### 4.1.5 Loop Fusion
+ Ajuntar dos bucles que poden tenir un comportament semblant i sense dependències. És una optimització que normalment no aplica el compilador.
+ 
+ #### 4.1.6 Ordre d'evaluació de la condició
+ Aprofitar la _Lazy Evaluation_ de C. El compilador no pot aplicar aquesta optimització. Podem considerar els costs de les diferents condicions per ordenar-les correctament intentant impedir que s'hagin de comprovar les més costoses.
+ 
+ #### 4.1.7 Eliminar els salts de difícil predicció.
+ Podem fer-ho per mitjà de bithacks.
+ 
+ ## 5. Optimitzacions conscients de la memòria.
+ Eines d'anàlisi
+  - **`/proc/cpuinfo`**
+  - **`/proc/meminfo`**
+  - **`lscpu`**
+  - _Perf_ i _Operf_
+  - **Valgrind:** Ens pot donar una visió acurada de la gestió del HEAP.
+  ```
+  Per grabar:
+  > valgrind --tool=massif prog
+  
+  Per veure:
+  > ms_print massif.out.PID
+  ```
+  
+  ### 5.1 Tècniques d'explotació de la jerarquia de memòria.
+  #### 5.1.1 Evitar l'alisaing
+  Evitar que el compilador forci accessos a memoria innecessaris per tal d'evitar el possible aliasing. Per exemple, en el codi següent, el compilador no sap si x i y estaran sempre apuntant a la mateixa dada i per tant ha d'accedir a memòria a cada iteració:
+  ```
+  void multiply(int *x, int *y, int n){ 
+   int i;
+   for (i=0; i<n; i++)
+    *x = *x + *y;
+  }
+  ```
+  Cosa que pot arreglar-se perque el valor d'x i y es guardi sempre en registres:
+  ```
+  void multiply(int *x, int *y, int n){ 
+   int i, tmp_x = *x, tmp_y = *y;
+   for (i=0; i<n; i++)
+    tmp_x = tmp_x + tmp_y;
+   *x = tmp_x;
+  }
+  ```
+#### 5.1.2 Alineament de dades.
+Tenir les dades correctament alineades a memòria ens permet aprofitar molt més els accessos i per tant tenir una molt millor explotació de l'ample de banda.
+ - **Alineament estàtic:** Generalment la memòria es troba alineada. El complador inclou _padding_ per a tenir en compte aquesta questió. Podem dir al compilador que no afegeixi padding als structs amb `__atribute__((__packed__))` o `#pragma pack(1)`
+ - **Alineament dinàmic:** Els mallocs alineen a int. Podem alinear a altres tamanys amb `int posix_memalign(void **ptr, sizet align, sizetsize);`
+ 
+ #### 5.1.3 Aprofitar l'ample de banda
+  - Eliminar paddings estúpids
+  - Usant tamanys de dades petits. Ser conseqüent amb els tamanys de les dades.
+  - Fer bufferings per no llegir i escriure dades a memoria una a una sinó aprofitant l'ample de banda.
+  - Reorganitzar els structs.
+
+#### 5.1.4 Explotar la localitat de les dades
+- Accedir a les matrius per files i no per columnes
+- Fusió de vectors per no tenir problemes de cache
+- Fer tractament de matrius en blocs per poder fer blocking.
+   
+## 6. SIMD
+Single instruction multiple data.
+### 6.1 Programació amb SIMD
+ - S'han anat fent diferents extensions. Falta saber quines tenim amb `lscpu`.
+ - Estructures de dades
+   - **`__mm128i`:** integer (16 bytes, 8 words, 4 ints, 2 longs)
+   - **`__mm128`:** Float (4 floats)
+   - **`__mm128d`:** double (2 doubles)
+ - Instruccions: `_mm_<intrin_op>_<sufix>` (128 bits) i `_mm256_<intrin_op>_<sufix>` (256 bits).
+   - p/ep/s: packed, extended packed o scalar. 
+   - s/d: single, double precision.
+   - i<numero>: Signed integer i tamany de l'integer.
+   - u<numero>: Unsigned integer i tamany de l'integer.
+ - **Coses a tenir en compte**
+   - Cal tenir les dades alineades!!
+   - Cal fer un load al registre i un store després.
+   - Exemple de codi:
+ 
+ ![imatge](https://user-images.githubusercontent.com/47460533/119388003-04825c80-bcca-11eb-83e7-e8c42fc3153f.png)
+
