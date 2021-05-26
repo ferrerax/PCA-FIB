@@ -54,6 +54,14 @@ parseargs() {
         fi
         ;;
 
+      -i|--inputfile)
+        if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
+          INPUT="$2"
+          shift 2 # past argument i value
+        else
+          usage
+        fi
+        ;;
       -n|--ntimes)
         if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
           N=$2
@@ -104,8 +112,8 @@ checkargs(){
   ## check outputs
   if (( $GOLDEN )); then 
     printinfo "Comparant els outputs dels executables..."
-    $GOLDENEXE ${PARAMS[@]} > $TMPGOLD
-    $EXECUTABLE ${PARAMS[@]} > $TMPOUT
+    $GOLDENEXE ${PARAMS[@]} > $TMPGOLD < $INPUT
+    $EXECUTABLE ${PARAMS[@]} > $TMPOUT < $INPUT
     if [ -n "$(diff $TMPGOLD $TMPOUT)" ]; then
       (( $VERBOSE )) && diff $TMPGOLD $TMPOUT
       printerr "Els output no estan goldens"
@@ -129,7 +137,8 @@ getstats() {
 
   for ((i=1; i<=$N; i++)) 
   do
-    /usr/bin/time -f "%U %S %e %P" $1 ${PARAMS[@]} > $TMPOUT 2> $TMPERR
+    
+    /usr/bin/time -f "%U %S %e %P" $1 ${PARAMS[@]} > $TMPOUT 2> $TMPERR < $INPUT
     OUT=($(<$TMPERR))
 
     USER=${OUT[0]}
@@ -178,7 +187,7 @@ getstats() {
 
 ### MAIN ####
 
-
+INPUT=/dev/stdin
 parseargs $@
 checkargs
 
